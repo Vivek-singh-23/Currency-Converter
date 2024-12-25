@@ -1,117 +1,151 @@
-/**
- * Sample React Native App
- * https://github.com/facebook/react-native
- *
- * @format
- */
-
-import React from 'react';
-import type {PropsWithChildren} from 'react';
+import React, { useState } from 'react';
+import { data } from './src/data';
+import Snackbar from 'react-native-snackbar';
+import CurrencyButton from './src/components/CurrencyButton';
 import {
-  SafeAreaView,
-  ScrollView,
+  FlatList,
+  Pressable,
   StatusBar,
   StyleSheet,
   Text,
-  useColorScheme,
+  TextInput,
   View,
 } from 'react-native';
 
-import {
-  Colors,
-  DebugInstructions,
-  Header,
-  LearnMoreLinks,
-  ReloadInstructions,
-} from 'react-native/Libraries/NewAppScreen';
+const App = () => {
+  const [inputValue, setInputValue] = useState('');
+  const [resultValue, setResultValue] = useState('');
+  const [targetCurrency, setTargetCurrency] = useState('');
 
-type SectionProps = PropsWithChildren<{
-  title: string;
-}>;
+  const buttonPressed = (targetValue:Currency) => {
+    if (!inputValue) {
+      return Snackbar.show({
+        text: 'Enter a value to convert',
+        backgroundColor: '#EA7773',
+        textColor: '#000000',
+      });
+    }
 
-function Section({children, title}: SectionProps): React.JSX.Element {
-  const isDarkMode = useColorScheme() === 'dark';
-  return (
-    <View style={styles.sectionContainer}>
-      <Text
-        style={[
-          styles.sectionTitle,
-          {
-            color: isDarkMode ? Colors.white : Colors.black,
-          },
-        ]}>
-        {title}
-      </Text>
-      <Text
-        style={[
-          styles.sectionDescription,
-          {
-            color: isDarkMode ? Colors.light : Colors.dark,
-          },
-        ]}>
-        {children}
-      </Text>
-    </View>
-  );
-}
-
-function App(): React.JSX.Element {
-  const isDarkMode = useColorScheme() === 'dark';
-
-  const backgroundStyle = {
-    backgroundColor: isDarkMode ? Colors.darker : Colors.lighter,
+    const inputAmount = parseFloat(inputValue);
+    if (!isNaN(inputAmount)) {
+      const convertedValue = inputAmount * targetValue.value;
+      const result = `${targetValue.symbol} ${convertedValue.toFixed(2)}`;
+      setResultValue(result);
+      setTargetCurrency(targetValue.name);
+    } else {
+      return Snackbar.show({
+        text: 'Not a valid number to convert',
+        backgroundColor: '#F4BE2C',
+        textColor: '#000000',
+      });
+    }
+    return;
   };
 
   return (
-    <SafeAreaView style={backgroundStyle}>
-      <StatusBar
-        barStyle={isDarkMode ? 'light-content' : 'dark-content'}
-        backgroundColor={backgroundStyle.backgroundColor}
-      />
-      <ScrollView
-        contentInsetAdjustmentBehavior="automatic"
-        style={backgroundStyle}>
-        <Header />
-        <View
-          style={{
-            backgroundColor: isDarkMode ? Colors.black : Colors.white,
-          }}>
-          <Section title="Step One">
-            Edit <Text style={styles.highlight}>App.tsx</Text> to change this
-            screen and then come back to see your edits.
-          </Section>
-          <Section title="See Your Changes">
-            <ReloadInstructions />
-          </Section>
-          <Section title="Debug">
-            <DebugInstructions />
-          </Section>
-          <Section title="Learn More">
-            Read the docs to discover what to do next:
-          </Section>
-          <LearnMoreLinks />
+    <>
+      <StatusBar />
+      <View style={styles.container}>
+        <View style={styles.topContainer}>
+          <View style={styles.inputContainer}>
+            <Text style={styles.inputLabel}>₹</Text>
+            <TextInput
+              style={styles.inputField}
+              value={inputValue}
+              placeholder="Enter amount in rupee"
+              keyboardType="number-pad"
+              onChangeText={(amount) => setInputValue(amount)}
+              maxLength={14}
+            />
+          </View>
+          {resultValue && <Text style={styles.resultText}>{resultValue}</Text>}
         </View>
-      </ScrollView>
-    </SafeAreaView>
+        <View style={styles.bottomContainer}>
+          <FlatList
+            numColumns={3}
+            data={data}
+            keyExtractor={(item) => item.name}
+            renderItem={({ item }) => (
+              <Pressable
+                style={[
+                  styles.button,
+                  targetCurrency === item.name && styles.selected,
+                ]}
+                onPress={() => buttonPressed(item)}
+              >
+                <CurrencyButton {...item} />
+              </Pressable>
+            )}
+          />
+        </View>
+      </View>
+    </>
   );
-}
+};
 
 const styles = StyleSheet.create({
-  sectionContainer: {
-    marginTop: 32,
-    paddingHorizontal: 24,
+  container: {
+    flex: 1,
+    backgroundColor: '#F2F2F2',
   },
-  sectionTitle: {
-    fontSize: 24,
-    fontWeight: '600',
+  topContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 20,
   },
-  sectionDescription: {
-    marginTop: 8,
+  inputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 10,
+    paddingHorizontal: 15,
+    paddingVertical: 10,
+    shadowColor: '#000',
+    shadowOpacity: 0.1,
+    shadowRadius: 5,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 3,
+    width: '90%',
+  },
+  inputLabel: {
     fontSize: 18,
-    fontWeight: '400',
+    fontWeight: 'bold',
+    color: '#333',
+    marginRight: 10,
   },
-  highlight: {
-    fontWeight: '700',
+  inputField: {
+    flex: 1,
+    fontSize: 16,
+    color: '#333',
+  },
+  resultText: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: '#333',
+    marginTop: 20,
+  },
+  bottomContainer: {
+    flex: 3,
+    paddingHorizontal: 10,
+    paddingTop: 20,
+  },
+  button: {
+    flex: 1,
+    margin: 10,
+    height: 80,
+    borderRadius: 15,
+    backgroundColor: '#FFFFFF',
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOpacity: 0.1,
+    shadowRadius: 5,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 3,
+  },
+  selected: {
+    backgroundColor: '#D6EAF8',
   },
 });
 
